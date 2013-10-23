@@ -27,9 +27,9 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 
 object MongoHelper extends Logging {
-	val IdKey = "_id"
-	val DropDatabaseCommand = "dropDatabase"
-	val DropCollectionCommand = "drop"
+  val IdKey = "_id"
+  val DropDatabaseCommand = "dropDatabase"
+  val DropCollectionCommand = "drop"
 
 
   val mongoClient = {

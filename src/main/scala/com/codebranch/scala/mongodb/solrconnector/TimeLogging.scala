@@ -25,6 +25,6 @@ trait TimeLogging { this : Actor with ActorLogging =>
     val res = f
     val end = System.currentTimeMillis()
     log.info(s"$action finished. Time = ${end - start} milliseconds")
-	  res
+    res
   }
 }

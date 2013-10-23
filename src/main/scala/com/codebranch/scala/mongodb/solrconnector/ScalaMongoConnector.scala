@@ -30,7 +30,7 @@ object ScalaMongoConnector extends Logging {
       System.exit(2)
     }
 
-	  val system = ActorSystem("Scala-mongo-connector")
-	  system.actorOf(Props[SolrImporter], "SolrImporter")
+    val system = ActorSystem("Scala-mongo-connector")
+    system.actorOf(Props[SolrImporter], "SolrImporter")
   }
 }

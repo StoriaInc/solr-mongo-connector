@@ -15,11 +15,13 @@ object ApplicationBuild extends Build
   val appName       = "scala-mongo-connector"
   val scalaVer      = "2.10.2"
   val AkkaVersion = "2.2.0"
-	val ElasticSearchVersion = "0.90.5"
+  val ElasticSearchVersion = "0.90.5"
   val isSnapshot    = true
   val version       = "1.0" + (if (isSnapshot) "-SNAPSHOT" else "")
 
-  val buildSettings = Defaults.defaultSettings ++ assemblySettings ++ Seq (
+  val scalaStyleSettings = org.scalastyle.sbt.ScalastylePlugin.Settings
+
+  val buildSettings = Defaults.defaultSettings ++ assemblySettings ++ scalaStyleSettings ++ Seq (
     organization := "codebranch",
     Keys.version := version,
     scalaVersion := scalaVer,

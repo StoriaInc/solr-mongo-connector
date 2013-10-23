@@ -108,9 +108,9 @@ object SolrHelper extends Logging {
         }
       }
       doc.addField("_id", update.documentID.get("_id"))
-	    //do not remove this fields
-	    doc.addField("_ts", update.timestamp.toLong)
-	    doc.addField("ns", update.namespace)
+      //do not remove this fields
+      doc.addField("_ts", update.timestamp.toLong)
+      doc.addField("ns", update.namespace)
 
       Some(doc)
     } else {
@@ -164,9 +164,9 @@ object SolrHelper extends Logging {
     else 0
   }
 
-	def dropCollectionFromSolr(query: String): Int = {
-		val response = solrServer.deleteByQuery(query)
-		//TODO: should we check response status?
-		solrServer.commit().getStatus
+  def dropCollectionFromSolr(query: String): Int = {
+    val response = solrServer.deleteByQuery(query)
+    //TODO: should we check response status?
+    solrServer.commit().getStatus
   }
 }

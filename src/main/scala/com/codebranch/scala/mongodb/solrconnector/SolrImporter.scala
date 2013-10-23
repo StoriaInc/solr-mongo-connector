@@ -43,12 +43,12 @@ import com.codebranch.scala.mongodb.solrconnector.SolrImporter.StartProcessing
  * Time: 12:24 PM
  */
 class SolrImporter extends Actor with ActorLogging {
-	import util.Config
+  import util.Config
   import util.TimestampHelper._
 
 
-	override def preStart() {
-		super.preStart()
+  override def preStart() {
+    super.preStart()
     val ts = readTimestamp
       val w = context.actorOf(Props(new MongoOplogReader()), "OplogReader")
       w ! StartProcessing(ts)
@@ -132,7 +132,7 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
       case None => {
         //TODO: this will fail on empty oplog
         val lastOpsTimestamp = new MongoOpLog(MongoHelper.mongoClient).getLastTimestamp.get
-	      context become dumpingDatabase(namespaces.toList, lastOpsTimestamp)
+        context become dumpingDatabase(namespaces.toList, lastOpsTimestamp)
       }
     }
   }
@@ -165,7 +165,7 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
         context.parent ! UpdateTimestamp(ts)
       })
 
-	    context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
+      context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
     }
     //just ignore this
     case BatchImported =>
@@ -175,118 +175,118 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
 //  def running(oplog: MongoOpLog): Receive = {
 //    case Process => {
 //
-//			oplog.flatMap {
-//				case o: MongoInsertOperation => getSolrInputDocument(o) map (AddAction(_))
-//				case o: MongoUpdateOperation => getSolrInputDocument(o) map (AddAction(_))
-//				case o: MongoDeleteOperation => Some(DeleteById(o.document.get(IdKey).toString))
-//				case o: MongoCommandOperation => getDeleteQuery(o)
+//      oplog.flatMap {
+//        case o: MongoInsertOperation => getSolrInputDocument(o) map (AddAction(_))
+//        case o: MongoUpdateOperation => getSolrInputDocument(o) map (AddAction(_))
+//        case o: MongoDeleteOperation => Some(DeleteById(o.document.get(IdKey).toString))
+//        case o: MongoCommandOperation => getDeleteQuery(o)
 //        case o: MongoNopOperation => None
-//			} foreach (solrWorker ! _)
+//      } foreach (solrWorker ! _)
 //
 //      solrWorker ! CommitToSolr
 //
-//	    def getDeleteQuery(d: MongoCommandOperation): Option[SolrQuery] = {
-//		    if(d.document.getInt(DropDatabaseCommand, 0) == 1)
-//			    Some(new SolrQuery(namespaces.map( s => "ns:" + s ).mkString(" OR ")))
-//		    else {
-//			    val droppedNs = d.document.getString(DropCollectionCommand, "")
-//			    if(namespaces(droppedNs))
-//				    Some(new SolrQuery(s"ns:$droppedNs"))
-//			    else
-//				    None
-//		    }
-//	    }
+//      def getDeleteQuery(d: MongoCommandOperation): Option[SolrQuery] = {
+//        if(d.document.getInt(DropDatabaseCommand, 0) == 1)
+//          Some(new SolrQuery(namespaces.map( s => "ns:" + s ).mkString(" OR ")))
+//        else {
+//          val droppedNs = d.document.getString(DropCollectionCommand, "")
+//          if(namespaces(droppedNs))
+//            Some(new SolrQuery(s"ns:$droppedNs"))
+//          else
+//            None
+//        }
+//      }
 //    }
 //  }
 
 
-	def dumpingDatabase(namespaces: List[String], lastTimestamp: BSONTimestamp): Receive = {
-		namespaces match {
-			case Nil => {
-				// we dumped all collections, send updates about timestamp and start reading oplog
-				context.parent ! UpdateTimestamp(lastTimestamp)
-				self ! StartProcessing(Some(lastTimestamp))
-				receive
-			}
-			case ns :: t => {
-				//we have smth to dump
-				val (db, collection) = getDbCollectionName(ns)
-				val cursor = mongoClient.getDB(db).getCollection(collection).find()
+  def dumpingDatabase(namespaces: List[String], lastTimestamp: BSONTimestamp): Receive = {
+    namespaces match {
+      case Nil => {
+        // we dumped all collections, send updates about timestamp and start reading oplog
+        context.parent ! UpdateTimestamp(lastTimestamp)
+        self ! StartProcessing(Some(lastTimestamp))
+        receive
+      }
+      case ns :: t => {
+        //we have smth to dump
+        val (db, collection) = getDbCollectionName(ns)
+        val cursor = mongoClient.getDB(db).getCollection(collection).find()
 
-				//send batch to SolrWorker
-				def sendBatch() {
-					val addList = ListBuffer[SolrInputDocument]()
-					while (cursor.hasNext && addList.length < Config.bulkMaxUpsert) {
-						try {
-							val doc = cursor.next.asInstanceOf[BasicDBObject]
-							addList.append(getSolrInputDocument(convert(doc), ns, lastTimestamp))
-							if(addList.length == Config.bulkMaxUpsert || !cursor.hasNext){
-								solrWorker ! SolrBatch(addList.clone(), Nil)
-							}
-						} catch {
-							case e: Exception => log.error(e, s"Error while dumping $ns")
-						}
-					}
-				}
+        //send batch to SolrWorker
+        def sendBatch() {
+          val addList = ListBuffer[SolrInputDocument]()
+          while (cursor.hasNext && addList.length < Config.bulkMaxUpsert) {
+            try {
+              val doc = cursor.next.asInstanceOf[BasicDBObject]
+              addList.append(getSolrInputDocument(convert(doc), ns, lastTimestamp))
+              if(addList.length == Config.bulkMaxUpsert || !cursor.hasNext){
+                solrWorker ! SolrBatch(addList.clone(), Nil)
+              }
+            } catch {
+              case e: Exception => log.error(e, s"Error while dumping $ns")
+            }
+          }
+        }
 
         //initiate start dumping
         self ! BatchImported
 
 
-				{
-					case BatchImported => {
-						if(cursor.hasNext) sendBatch()
-						else context become dumpingDatabase(t, lastTimestamp)
-					}
-				}
-			}
-		}
-	}
+        {
+          case BatchImported => {
+            if(cursor.hasNext) sendBatch()
+            else context become dumpingDatabase(t, lastTimestamp)
+          }
+        }
+      }
+    }
+  }
 }
 
 
 class SolrWorker extends Actor with ActorLogging with Stash with TimeLogging {
-	import util.SolrHelper._
-	import context.dispatcher
+  import util.SolrHelper._
+  import context.dispatcher
 
-	def receive: Receive = {
-		case SolrBatch(add, del) => {
-			context become exportingToSolr(() => exportDocs(add, del))
-		}
-	}
-
-
-	def exportingToSolr(action: () => Boolean): Receive = {
-		context.system.scheduler.scheduleOnce(0 seconds, self, Process)
-
-		{
-			case Process => {
-				log.debug(s"trying import docs to solr")
-				if(action()) {
-					log.debug(s"docs imported to solr ")
-					context.parent ! BatchImported
-					unstashAll()
-					context become receive
-				} else {
-					log.warning(s"fail to import docs to solr, try once more")
-					context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
-				}
-			}
-			case a: SolrAction => stash()
-		}
-	}
+  def receive: Receive = {
+    case SolrBatch(add, del) => {
+      context become exportingToSolr(() => exportDocs(add, del))
+    }
+  }
 
 
-	def dropCollection(query: String): Boolean = {
-		try {
-			dropCollectionFromSolr(query) == 0
-		} catch {
-			case e: Exception => {
-				log.error(e, s"Error during dropping collection from solr, query:\n$query")
-				false
-			}
-		}
-	}
+  def exportingToSolr(action: () => Boolean): Receive = {
+    context.system.scheduler.scheduleOnce(0 seconds, self, Process)
+
+    {
+      case Process => {
+        log.debug(s"trying import docs to solr")
+        if(action()) {
+          log.debug(s"docs imported to solr ")
+          context.parent ! BatchImported
+          unstashAll()
+          context become receive
+        } else {
+          log.warning(s"fail to import docs to solr, try once more")
+          context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
+        }
+      }
+      case a: SolrAction => stash()
+    }
+  }
+
+
+  def dropCollection(query: String): Boolean = {
+    try {
+      dropCollectionFromSolr(query) == 0
+    } catch {
+      case e: Exception => {
+        log.error(e, s"Error during dropping collection from solr, query:\n$query")
+        false
+      }
+    }
+  }
 
 
   //true if processed, false on any error
@@ -295,35 +295,35 @@ class SolrWorker extends Actor with ActorLogging with Stash with TimeLogging {
       delList: Iterable[String]
       ): Boolean =
     try {
-	    log.debug(s"export docs: addList size ${addList.size}, delList size ${delList.size}")
+      log.debug(s"export docs: addList size ${addList.size}, delList size ${delList.size}")
 
-	    val addResponseStatus = addDocsToSolr(addList, commit = delList.isEmpty)
-	    val deleteResponseStatus = deleteDocsFromSolr(delList.toList, commit = true)
+      val addResponseStatus = addDocsToSolr(addList, commit = delList.isEmpty)
+      val deleteResponseStatus = deleteDocsFromSolr(delList.toList, commit = true)
 
-	    val success = addResponseStatus == 0 && deleteResponseStatus == 0
+      val success = addResponseStatus == 0 && deleteResponseStatus == 0
 
-	    if(!success)
-		    log.warning(s"solr response status: add $addResponseStatus, delete: $deleteResponseStatus")
-	    success
+      if(!success)
+        log.warning(s"solr response status: add $addResponseStatus, delete: $deleteResponseStatus")
+      success
 
     } catch {
-			case e: Exception => {
-				log.error(e, s"Error during exporting docs to solr")
-				false
-			}
-		}
+      case e: Exception => {
+        log.error(e, s"Error during exporting docs to solr")
+        false
+      }
+    }
 }
 
 
 
 object SolrImporter {
-	sealed trait SolrAction
+  sealed trait SolrAction
   case class SolrBatch(add: Iterable[SolrInputDocument], del: Iterable[String])
       extends SolrAction
 
 
-	case object Process
+  case object Process
   case class StartProcessing(lastTimestamp: Option[BSONTimestamp])
   case class UpdateTimestamp(timestamp: BSONTimestamp)
-	case object BatchImported
+  case object BatchImported
 }
