@@ -1,2 +1,2 @@
-scala-mongo-connector
+solr-mongo-connector
 =====================
