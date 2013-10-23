@@ -1,0 +1,26 @@
+mongo_connector.conf
+.idea/
+.idea_modules
+*.iws
+*.iml
+
+**/out/
+**/project/project
+target/
+**/tmp/
+logs/
+
+#Hidden files
+.*
+!.gitignore
+
+#Temp files
+*~
+
+
+lib_managed/
+lib_managed_flat/
+
+.directory
+.ftdm
+.history
