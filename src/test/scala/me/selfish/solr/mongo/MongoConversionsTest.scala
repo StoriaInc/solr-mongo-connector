@@ -1,6 +1,5 @@
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo
 
-import collection.mutable.Stack
 import org.scalatest._
 import org.scalatest.matchers.ShouldMatchers
 import com.mongodb.{BasicDBList, BasicDBObject}

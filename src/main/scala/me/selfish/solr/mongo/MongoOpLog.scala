@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo
 
 import scala.collection.JavaConversions._
 import org.bson.types.BSONTimestamp
@@ -70,7 +70,7 @@ class MongoOpLog(mongoClient: MongoClient,
   }
 
 
-  def getLastTimestamp : Option[BSONTimestamp] = {
+  def getLastTimestamp: Option[BSONTimestamp] = {
     val cursor = oplog.find().sort(new BasicDBObject( "$natural", -1 )).limit(1)
     if (cursor.hasNext) {
       Some(cursor.next().get("ts").asInstanceOf[BSONTimestamp])
@@ -154,22 +154,34 @@ sealed trait MongoOpLogEntry {
   override def toString = s"$opType in $namespace.\nDocument: $document"
 }
 
-case class MongoInsertOperation(timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
+
+case class MongoInsertOperation(
+    timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
   val opType = InsertOp
 }
 
-case class MongoUpdateOperation(timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject, documentID: BasicDBObject) extends MongoOpLogEntry {
+
+case class MongoUpdateOperation(
+    timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject, documentID: BasicDBObject)
+    extends MongoOpLogEntry {
   val opType = UpdateOp
   override def toString = super.toString + s"\nDocumentId: $documentID"
 }
 
-case class MongoDeleteOperation(timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
+
+case class MongoDeleteOperation(
+    timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
   val opType = DeleteOp
 }
 
-case class MongoCommandOperation(timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
+
+case class MongoCommandOperation(
+    timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
   val opType = CommandOp
 }
-case class MongoNopOperation(timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
+
+
+case class MongoNopOperation(
+    timestamp: BSONTimestamp, opID: Option[Long], namespace: String, document: BasicDBObject) extends MongoOpLogEntry {
   val opType = NopOp
 }

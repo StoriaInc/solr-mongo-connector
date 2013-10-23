@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector.util
+package me.selfish.solr.mongo.util
 
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logging

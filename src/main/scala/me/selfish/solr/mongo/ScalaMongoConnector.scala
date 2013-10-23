@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo
 
 import com.typesafe.scalalogging.slf4j.Logging
 import akka.actor.{Props, ActorSystem}
-import com.codebranch.scala.mongodb.solrconnector.util.Config
+import me.selfish.solr.mongo.util.Config
 
 
 

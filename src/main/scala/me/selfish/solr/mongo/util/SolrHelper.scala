@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector.util
+package me.selfish.solr.mongo.util
 
 
 import scala.collection.JavaConversions._
@@ -23,10 +23,9 @@ import org.apache.solr.common.{SolrInputField, SolrInputDocument}
 import TimestampHelper.BSONToLong
 import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException
 import com.typesafe.scalalogging.slf4j.Logging
-import com.codebranch.scala.mongodb.solrconnector.{MongoInsertOperation, MongoUpdateOperation, MongoOpLogEntry}
 import com.mongodb.DBObject
 import org.apache.solr.client.solrj.SolrQuery
-
+import me.selfish.solr.mongo.{MongoUpdateOperation, MongoInsertOperation, MongoOpLogEntry, MongoConversions}
 
 
 object SolrHelper extends Logging {
@@ -38,7 +37,7 @@ object SolrHelper extends Logging {
   //used to work with mongo $set operation on arrays
   private val r = """(.*)\.(\d+)$""".r
 
-  import com.codebranch.scala.mongodb.solrconnector.MongoConversions._
+  import MongoConversions._
   def getSolrInputDocument(operation: MongoOpLogEntry): Option[SolrInputDocument] = {
 
    operation match {

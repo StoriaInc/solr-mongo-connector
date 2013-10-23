@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo.util
+
+import org.bson.types.BSONTimestamp
+import scala.language.implicitConversions
 
 
-import akka.actor.{ActorLogging, Actor}
+object TimestampHelper {
 
-trait TimeLogging { this : Actor with ActorLogging =>
-  def loggingTime[T](action: String)(f: => T):T = {
-    log.info(s"$action started")
-    val start = System.currentTimeMillis()
-    val res = f
-    val end = System.currentTimeMillis()
-    log.info(s"$action finished. Time = ${end - start} milliseconds")
-    res
+  //scalastyle:off
+  implicit def BSONToLong(ts: BSONTimestamp): Long = {
+    (ts.getTime.toLong << 32) + ts.getInc
+  }
+  //scalastyle:on
+
+
+  implicit def toBSONTimestamp(ts: Long): BSONTimestamp = {
+    val seconds = ts >> 32
+    val increment = ts & 0xffffffff
+
+    new BSONTimestamp(seconds.toInt, increment.toInt)
   }
 }
+

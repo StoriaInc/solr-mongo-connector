@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo
 
 import scala.collection.JavaConversions._
 import com.mongodb.{BasicDBList, BasicDBObject}

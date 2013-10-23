@@ -13,28 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector
-
+package me.selfish.solr.mongo
 
 import akka.actor._
 import org.apache.solr.common.SolrInputDocument
 import scala.collection.mutable.ListBuffer
-import scala.Some
 import scala.concurrent.duration._
 import org.bson.types.BSONTimestamp
-import com.codebranch.scala.mongodb.solrconnector.SolrImporter._
-import collection.mutable
 import scala.io.Source
 import scala.reflect.io.File
 import akka.actor.SupervisorStrategy.Resume
-import com.mongodb.{DBCursor, BasicDBObject}
-import com.codebranch.scala.mongodb.solrconnector.util.{MongoHelper, Config, SolrHelper}
-import org.apache.solr.client.solrj.SolrQuery
+import com.mongodb.BasicDBObject
+import me.selfish.solr.mongo.util._
 import scala.Some
 import akka.actor.OneForOneStrategy
-import com.codebranch.scala.mongodb.solrconnector.SolrImporter.UpdateTimestamp
-import com.codebranch.scala.mongodb.solrconnector.SolrImporter.StartProcessing
-
 
 
 /**
@@ -43,8 +35,8 @@ import com.codebranch.scala.mongodb.solrconnector.SolrImporter.StartProcessing
  * Time: 12:24 PM
  */
 class SolrImporter extends Actor with ActorLogging {
-  import util.Config
-  import util.TimestampHelper._
+  import SolrImporter._
+  import TimestampHelper._
 
 
   override def preStart() {
@@ -103,10 +95,11 @@ class SolrImporter extends Actor with ActorLogging {
 
 class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
 
-  import util.SolrHelper._
-  import util.MongoHelper._
   import MongoConversions._
-  import util.TimestampHelper._
+  import SolrImporter._
+  import SolrHelper._
+  import MongoHelper._
+  import TimestampHelper._
   import context.dispatcher
 
   val solrWorker =  context.actorOf(
@@ -171,34 +164,6 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
     case BatchImported =>
   }
 
-  //so slow!
-//  def running(oplog: MongoOpLog): Receive = {
-//    case Process => {
-//
-//      oplog.flatMap {
-//        case o: MongoInsertOperation => getSolrInputDocument(o) map (AddAction(_))
-//        case o: MongoUpdateOperation => getSolrInputDocument(o) map (AddAction(_))
-//        case o: MongoDeleteOperation => Some(DeleteById(o.document.get(IdKey).toString))
-//        case o: MongoCommandOperation => getDeleteQuery(o)
-//        case o: MongoNopOperation => None
-//      } foreach (solrWorker ! _)
-//
-//      solrWorker ! CommitToSolr
-//
-//      def getDeleteQuery(d: MongoCommandOperation): Option[SolrQuery] = {
-//        if(d.document.getInt(DropDatabaseCommand, 0) == 1)
-//          Some(new SolrQuery(namespaces.map( s => "ns:" + s ).mkString(" OR ")))
-//        else {
-//          val droppedNs = d.document.getString(DropCollectionCommand, "")
-//          if(namespaces(droppedNs))
-//            Some(new SolrQuery(s"ns:$droppedNs"))
-//          else
-//            None
-//        }
-//      }
-//    }
-//  }
-
 
   def dumpingDatabase(namespaces: List[String], lastTimestamp: BSONTimestamp): Receive = {
     namespaces match {
@@ -246,8 +211,9 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
 
 
 class SolrWorker extends Actor with ActorLogging with Stash with TimeLogging {
-  import util.SolrHelper._
   import context.dispatcher
+  import SolrHelper._
+  import SolrImporter._
 
   def receive: Receive = {
     case SolrBatch(add, del) => {

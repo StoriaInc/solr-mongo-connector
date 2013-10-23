@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.codebranch.scala.mongodb.solrconnector.util
+package me.selfish.solr.mongo.util
 
 
 import scala.collection.JavaConversions._
 import com.mongodb._
-import com.codebranch.scala.mongodb.solrconnector.MongoConversions
-import MongoConversions.convert
-import scala.collection.mutable.ListBuffer
-import org.apache.solr.common.SolrInputDocument
 import com.typesafe.scalalogging.slf4j.Logging
-
 
 
 object MongoHelper extends Logging {
@@ -32,7 +27,7 @@ object MongoHelper extends Logging {
   val DropCollectionCommand = "drop"
 
 
-  val mongoClient = {
+  lazy val mongoClient = {
     //docs says that primary is default, but...
     val options = MongoClientOptions.builder().readPreference(ReadPreference.primary()).build()
 

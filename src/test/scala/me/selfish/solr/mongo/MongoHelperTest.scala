@@ -1,13 +1,12 @@
-package com.codebranch.scala.mongodb.solrconnector
+package me.selfish.solr.mongo
 
-import collection.mutable.Stack
 import org.scalatest._
 import org.scalatest.matchers.ShouldMatchers
 
 
 
 class MongoHelperTest extends FlatSpec with ShouldMatchers {
-  import com.codebranch.scala.mongodb.solrconnector.util.MongoHelper._
+  import util.MongoHelper._
 
   "MongoHelper" should "split dbName.Collection to (dbName, Collection)" in {
     val namespace = "dbName.Collection"
