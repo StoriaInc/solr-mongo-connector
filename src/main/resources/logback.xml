@@ -23,7 +23,7 @@
         </encoder>
     </appender>
 
-		<logger name="com.codebranch.scala.mongodb.solrconnector" level="DEBUG"/>
+		<logger name="me.selfish.solr.mongo" level="DEBUG"/>
 
     <root level="WARN">
         <appender-ref ref="STDOUT" />

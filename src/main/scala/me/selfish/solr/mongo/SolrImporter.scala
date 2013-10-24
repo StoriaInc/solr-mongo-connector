@@ -41,46 +41,14 @@ class SolrImporter extends Actor with ActorLogging {
 
   override def preStart() {
     super.preStart()
-    val ts = readTimestamp
+    //val ts = readTimestamp
+    val ts = SolrHelper.getLastTimestamp(Config.namespace)
       val w = context.actorOf(Props(new MongoOplogReader()), "OplogReader")
       w ! StartProcessing(ts)
 
   }
 
-
-  def receive: Receive = {
-    case UpdateTimestamp(ts) => {
-      log.debug(s"updating timestamp")
-      saveTimestamp(ts)
-    }
-  }
-
-
-  //TODO: do not save ts in file, get it from solr
-  def saveTimestamp(ts: BSONTimestamp) {
-    try {
-      File(Config.configFileUrl).writeAll(BSONToLong(ts).toString)
-    } catch {
-      case e: Exception => {
-        log.error(s"could not save timestamps to ${Config.configFileUrl}")
-      }
-    }
-  }
-
-
-  def readTimestamp: Option[BSONTimestamp] = {
-    try {
-      val lines = Source.fromFile(Config.configFileUrl).getLines().toList
-      Some(toBSONTimestamp(lines(0).toLong))
-    } catch {
-      case e: Exception => {
-        log.error(s"could not read timestamps from ${Config.configFileUrl}")
-        None
-      }
-    }
-  }
-
-
+  def receive: Receive = Actor.emptyBehavior
 
   override val supervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 50, withinTimeRange = 1 minute)
@@ -154,10 +122,6 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
 
       batches foreach(b => solrWorker ! b)
 
-      ops.lastOption map(_.timestamp) foreach (ts => {
-        context.parent ! UpdateTimestamp(ts)
-      })
-
       context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
     }
     //just ignore this
@@ -168,8 +132,7 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
   def dumpingDatabase(namespaces: List[String], lastTimestamp: BSONTimestamp): Receive = {
     namespaces match {
       case Nil => {
-        // we dumped all collections, send updates about timestamp and start reading oplog
-        context.parent ! UpdateTimestamp(lastTimestamp)
+        // we dumped all collections, start reading oplog
         self ! StartProcessing(Some(lastTimestamp))
         receive
       }
@@ -290,6 +253,5 @@ object SolrImporter {
 
   case object Process
   case class StartProcessing(lastTimestamp: Option[BSONTimestamp])
-  case class UpdateTimestamp(timestamp: BSONTimestamp)
   case object BatchImported
 }

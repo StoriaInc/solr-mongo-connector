@@ -26,6 +26,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import com.mongodb.DBObject
 import org.apache.solr.client.solrj.SolrQuery
 import me.selfish.solr.mongo.{MongoUpdateOperation, MongoInsertOperation, MongoOpLogEntry, MongoConversions}
+import org.bson.types.BSONTimestamp
 
 
 object SolrHelper extends Logging {
@@ -167,5 +168,17 @@ object SolrHelper extends Logging {
     val response = solrServer.deleteByQuery(query)
     //TODO: should we check response status?
     solrServer.commit().getStatus
+  }
+
+  def getLastTimestamp(collections: List[String]): Option[BSONTimestamp] = {
+    import me.selfish.solr.mongo.util.TimestampHelper._
+
+    val query = new SolrQuery("ns:"+collections.mkString("("," OR ",")"))
+    query.addSort("_ts", SolrQuery.ORDER.desc)
+    val docs = solrServer.query( query ).getResults()
+    docs.getNumFound match {
+      case num:Long if num > 0 => Some( toBSONTimestamp(docs.get(0).getFieldValue("_ts").toString.toLong) )
+      case _ => None
+    }
   }
 }

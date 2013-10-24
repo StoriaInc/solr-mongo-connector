@@ -57,7 +57,8 @@ object ApplicationBuild extends Build {
     "org.scalatest" %% "scalatest" % "1.9.2",
     "org.apache.solr" % "solr-solrj" % "4.5.0",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
-    "com.typesafe" %% "scalalogging-slf4j" % "1.0.1"
+    "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+    "commons-logging" % "commons-logging" % "1.1.1"
   )
 
   val main = Project(
