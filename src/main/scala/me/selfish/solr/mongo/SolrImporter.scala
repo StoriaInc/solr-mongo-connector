@@ -120,7 +120,10 @@ class MongoOplogReader extends Actor with ActorLogging with TimeLogging {
         SolrBatch(add.map(getSolrInputDocument).flatten, del.map(_.document.get("_id").toString))
       }}
 
-      batches foreach(b => solrWorker ! b)
+      batches foreach { b =>
+        log.debug(s"sending batch $b to solrWorker")
+        solrWorker ! b
+      }
 
       context.system.scheduler.scheduleOnce(Config.workerSleep milliseconds, self, Process)
     }
@@ -179,7 +182,8 @@ class SolrWorker extends Actor with ActorLogging with Stash with TimeLogging {
   import SolrImporter._
 
   def receive: Receive = {
-    case SolrBatch(add, del) => {
+    case batch @ SolrBatch(add, del) => {
+      log.debug(s"got $batch")
       context become exportingToSolr(() => exportDocs(add, del))
     }
   }
